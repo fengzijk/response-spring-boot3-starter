@@ -18,20 +18,35 @@
 
 ### 2. config 配置文件
 ~~~yml
-global-response:
+api-response:
   enabled: true
-  # 请求响应日志开关
-  request-log-url-pattern: /*
-  # 忽略的请求头
+  # 有些请求不需要封装  可以根据header不增强
   ignore-header-list:
     - feign
-  # 需要过滤包装的类   
+  # 响应增强过滤类列表   比如有些接口不要 输出image等
   advice-filter-class-list:
-    - com.fengzijk.demo.common.advice.GlobalResponseAdvice
-    - com.fengzijk.demo.common.advice.GlobalRequestLogAdvice
-    # 需要过滤的包
-  advice-filter-package-list: 
-    - com.fengzijk.demo.common.advice
+    - com.fengzijk.common.advice.ApiResponseAdvice
+  # 响应增强过滤包列表
+  adviceFilterPackageList:
+    - com.fengzijk.common.advice
+
+  # 请求响应日志配置
+  request-log:
+    # 是否开启请求响应日志
+    enabled: true
+    # 响应内容可见类型列表
+    visible-content-type-list: application/json
+    # 忽略的url列表
+    ignore-url-list:
+      - /open/dict/all
+     # 敏感header列表
+    sensitive-headers-list:
+      - authorization
+    # 最大响应体大小
+    max-body-size: 2048
+    # 响应日志url匹配模式列表
+    request-log-url-pattern-list:
+      - ^/open/dict/all
 
 ~~~
 
@@ -46,7 +61,7 @@ global-response:
 ~~~json
 
 {
-  "code": "21000",
+  "statusCode": "21000",
   "statusMessage": "参数错误",
   "data": [
     "ss不能为空",
@@ -58,49 +73,3 @@ global-response:
 
 ~~~
 
-## 验签
-##### 继承验签基础类
-~~~java
-
-public class UserInfoDTO extends BaseSignDTO {
-    /**
-     * 姓名
-     */
-    private String username;
-
-    /**
-     * 昵称
-     */
-    private String nickname;
-
-}
-~~~
-
-##### 加签验签
-~~~ java
-
-
- // appid
-String appId="fgdfgdg33ghfghf";
-// APP秘钥 
-String secretKey="jhghjffgdfgdgyy";
-
-//对象 加签名
-UserInfoDTO userInfoDTO= new UserInfoDTO();
-userInfoDTO.setUsername("11111");
-userInfoDTO.setNickname("test");
-userInfoDTO.setAppId(appId);
-// 加签类型
-userInfoDTO.setSignType(SignatureUtils.SignType.MD5.name());
-// 时间戳
-userInfoDTO.setTimestamp(SignUtils.getTodayDateTime());
-// 随机字符串
-userInfoDTO.setNonce("hgghfgsdfdfsf");
-// 设置签名
-userInfoDTO.setSign(SignatureUtils.getSignV2(userInfoDTO,secretKey));
-
-// 对象方式验签
-boolean b = SignatureUtils.validateSignV2(userInfoDTO, secretKey);
-
-System.out.println(b);
-~~~
